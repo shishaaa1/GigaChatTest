@@ -6,8 +6,8 @@ namespace YandexGptTest
 {
     internal class Program
     {
-        static string ApiKey = "AQVNylIfg9xPapEmQw-4jzX8ywItLBJKpOfVXeuX";
-        static string FolderId = "b1g86icvkn9etv2gu8ja";
+        static string ApiKey = "***";
+        static string FolderId = "***";
 
         static async Task Main(string[] args)
         {
