@@ -20,6 +20,17 @@ namespace GigaChatTest
         static async Task Main(string[] args)
         {
             string Token = await GetToken(ClientId, AuthorizationKey);
+            if (Token == null)
+            {
+                Console.WriteLine("Не удалось получить токен");
+            }
+            while (true)
+            {
+                Console.Write("Сообщение: ");
+                string Message = Console.ReadLine();
+                ResponseMessage Answer = await GetAnswer(Token, Message);
+                Console.WriteLine("Ответ: " + Answer.choices[0].message.content);
+            }
         }
         /// <summary>
         /// Метод получения токена пользователя
