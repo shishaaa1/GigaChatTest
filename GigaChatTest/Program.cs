@@ -1,6 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using GigaChatTest.Response;
+using Newtonsoft.Json;
 using System.Net.Security;
+using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace GigaChatTest
 {
@@ -14,9 +17,9 @@ namespace GigaChatTest
         /// Код авторизации
         /// </summary>
         static string AuthorizationKey = "MDE5YjAzOGYtYmUzMi03NzI4LTliYTgtODZiMDNhZmI1ZWZjOjdlZTk5Y2MzLTFlMGEtNGFjMC1hMjI0LWMxY2ZiZjY1ZmNiMA==";
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            string Token = await GetToken(ClientId, AuthorizationKey);
         }
         /// <summary>
         /// Метод получения токена пользователя
@@ -46,13 +49,59 @@ namespace GigaChatTest
                     if (Response.IsSuccessStatusCode)
                     {
                         string ResponseContent = await Response.Content.ReadAsStringAsync();
-                        ResponseToken Token = JsonConvert.DeserializeObject<string>(ResponseContent);
+                        ResponseToken Token = JsonConvert.DeserializeObject<ResponseToken>(ResponseContent);
                         ReturnToken = Token.access_token;
                     }
 
                 }
             }
             return ReturnToken;
+        }
+        ///<summary>
+        ///Метод получения ответа
+        ///</summary>
+        ///<param name="token">Токен пользователя</param>
+        ///<param name="message">Сообщение</param>
+        ///<returns></returns>
+        public static async Task<ResponseMessage> GetAnswer(string token, string message)
+        {
+            ResponseMessage responseMessage = null;
+            string Url = "https://gigachat.devices.sberbank.ru/api/v1/chat/completions";
+            using (HttpClientHandler Handler = new HttpClientHandler())
+            {
+                Handler.ServerCertificateCustomValidationCallback = (message, cert, chain, sslPolicyErrors) => true;
+                using (HttpClient client = new HttpClient(Handler))
+                {
+                    HttpRequestMessage Request = new HttpRequestMessage(HttpMethod.Post, Url);
+                    Request.Headers.Add("Accept", "application/json");
+                    Request.Headers.Add("Authorization", $"Bearer {token}");
+                    Models.Request DataRequest = new Models.Request()
+                    {
+                        model = "GigaChat",
+                        stream = false,
+                        repetition_penalty = 1,
+                        messages=new List<Models.Request.Message>()
+                        {
+                            new Models.Request.Message()
+                            {
+
+                                role="user",
+                                content=message
+                            }
+                        }
+                    };
+                    string JsonContent = JsonConvert.SerializeObject(DataRequest);
+                    Request.Content = new StringContent(JsonContent, Encoding.UTF8, "application/json");
+                    HttpResponseMessage Response = await client.SendAsync(Request);
+                    if (Response.IsSuccessStatusCode)
+                    {
+                        string ResponseContent = await Response.Content.ReadAsStringAsync();
+                        responseMessage = JsonConvert.DeserializeObject<ResponseMessage>(ResponseContent);
+                    }
+                }
+            }
+            return responseMessage;
+
         }
     }
 }
