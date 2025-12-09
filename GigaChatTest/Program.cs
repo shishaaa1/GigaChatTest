@@ -1,4 +1,6 @@
-﻿using System.Net.Security;
+﻿using Newtonsoft.Json;
+using System.Net.Security;
+using System.Text.Json.Serialization;
 
 namespace GigaChatTest
 {
@@ -35,8 +37,22 @@ namespace GigaChatTest
                     Request.Headers.Add("Accept", "application/json");
                     Request.Headers.Add("RqUID", rqUID);
                     Request.Headers.Add("Authorization", $"Bearer {bearer}");
+                    var Data = new List<KeyValuePair<string, string>>
+                    {
+                       new KeyValuePair<string, string>("scope", "GIGACHAT_API_PERS")
+                    };
+                    Request.Content = new FormUrlEncodedContent(Data);
+                    HttpResponseMessage Response = await client.SendAsync(Request);
+                    if (Response.IsSuccessStatusCode)
+                    {
+                        string ResponseContent = await Response.Content.ReadAsStringAsync();
+                        ResponseToken Token = JsonConvert.DeserializeObject<string>(ResponseContent);
+                        ReturnToken = Token.access_token;
+                    }
+
                 }
             }
+            return ReturnToken;
         }
     }
 }
